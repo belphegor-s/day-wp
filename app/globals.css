@@ -48,3 +48,11 @@ body {
   background: var(--accent);
   color: #fff;
 }
+
+@layer base {
+  button:not(:disabled),
+  select,
+  [role='button'] {
+    cursor: pointer;
+  }
+}

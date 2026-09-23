@@ -94,8 +94,15 @@ export function Builder() {
           <span className="text-[13px] text-muted">Your URL</span>
           <div className="flex items-stretch overflow-hidden rounded-lg border border-line bg-surface">
             <code className="min-w-0 flex-1 overflow-x-auto px-3 py-2.5 font-mono text-[13px] whitespace-nowrap text-fg">{origin ? url : '…'}</code>
-            <button type="button" onClick={copy} className="border-l border-line px-4 font-mono text-[13px] text-muted transition-colors hover:text-fg">
-              {copied ? 'copied' : 'copy'}
+            <button
+              type="button"
+              onClick={copy}
+              aria-label={copied ? 'Copied' : 'Copy URL'}
+              className="grid shrink-0 border-l border-line px-4 font-mono text-[13px] text-muted transition-colors hover:text-fg"
+            >
+              {/* Both labels share one cell so the button never changes width. */}
+              <span className={`col-start-1 row-start-1 self-center transition-opacity duration-200 ${copied ? 'opacity-0' : 'opacity-100'}`}>copy</span>
+              <span className={`col-start-1 row-start-1 self-center text-fg transition-opacity duration-200 ${copied ? 'opacity-100' : 'opacity-0'}`}>copied</span>
             </button>
           </div>
         </div>

@@ -21,6 +21,7 @@ uniform float uHover;
 uniform vec3 uFg;
 uniform vec3 uAccent;
 uniform float uStrength;
+uniform float uLane;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -39,26 +40,31 @@ void main() {
   // Slow diagonal tide plus drifting noise.
   float tide = 0.5 + 0.5 * sin((id.x * 0.6 + id.y * 0.9) * 0.18 - uTime * 0.35);
   float drift = noise(id * 0.09 + vec2(uTime * 0.025, -uTime * 0.018));
-  float swell = smoothstep(0.35, 1.0, tide * 0.55 + drift * 0.65);
+  float swell = smoothstep(0.3, 1.0, tide * 0.5 + drift * 0.7);
 
   float near = smoothstep(220.0, 0.0, distance(px, uMouse)) * uHover;
 
-  float r = 0.055 + swell * 0.07 + near * 0.09;
+  float r = 0.05 + swell * 0.055 + near * 0.07;
   float aa = 1.0 / cell;
   float dotMask = 1.0 - smoothstep(r - aa, r + aa, length(gv));
 
-  float a = 0.05 + swell * 0.11 + near * 0.22;
+  float a = 0.03 + swell * 0.07 + near * 0.14;
 
   // A rare dot warms to red and cools again, each on its own clock.
   float seed = hash(id + 7.31);
   float pulse = sin(uTime * (0.25 + seed * 0.2) + seed * 40.0);
   float today = step(0.992, seed) * smoothstep(0.6, 1.0, pulse);
   vec3 col = mix(uFg, uAccent, today);
-  a = mix(a, 0.55, today);
+  a = mix(a, 0.38, today);
 
-  // Fade toward the lower viewport so text stays calm.
+  // Even across the whole viewport, softening only toward the edges.
   vec2 uv = gl_FragCoord.xy / uRes;
-  float fade = mix(0.35, 1.0, smoothstep(0.0, 0.9, uv.y));
+  vec2 q = (uv - 0.5) * vec2(uRes.x / uRes.y, 1.0);
+  float fade = mix(1.0, 0.55, smoothstep(0.35, 1.1, length(q)));
+
+  // Quiet reading lane under the content column; the field lives in the margins.
+  float fromCenter = abs(px.x - uRes.x / uDpr * 0.5);
+  fade *= mix(0.3, 1.0, smoothstep(uLane - 60.0, uLane + 140.0, fromCenter));
 
   float alpha = dotMask * a * fade * uStrength;
   gl_FragColor = vec4(col * alpha, alpha);
@@ -106,7 +112,8 @@ export function DotField() {
       uHover = u('uHover'),
       uFg = u('uFg'),
       uAccent = u('uAccent'),
-      uStrength = u('uStrength');
+      uStrength = u('uStrength'),
+      uLane = u('uLane');
 
     const dark = matchMedia('(prefers-color-scheme: dark)');
     const still = matchMedia('(prefers-reduced-motion: reduce)');
@@ -131,6 +138,8 @@ export function DotField() {
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(uRes, canvas.width, canvas.height);
       gl.uniform1f(uDpr, dpr);
+      // Half the content column (max-w 880px), in CSS pixels.
+      gl.uniform1f(uLane, Math.min(440, w / 2));
     };
 
     const mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999, hover: 0, target: 0 };
@@ -199,5 +208,5 @@ export function DotField() {
     };
   }, []);
 
-  return <canvas ref={ref} aria-hidden className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-0 transition-opacity duration-[1500ms]" />;
+  return <canvas ref={ref} aria-hidden className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-0 transition-opacity duration-1500" />;
 }
