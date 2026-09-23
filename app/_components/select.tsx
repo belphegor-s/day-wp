@@ -31,6 +31,7 @@ export function Select({ value, onChange, groups, labelledBy, placeholder = 'Sel
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const [up, setUp] = useState(false);
+  const [maxH, setMaxH] = useState(288);
 
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -41,7 +42,10 @@ export function Select({ value, onChange, groups, labelledBy, placeholder = 'Sel
     if (disabled || !flat.length) return;
     const rect = trigger.current!.getBoundingClientRect();
     const below = window.innerHeight - rect.bottom;
-    setUp(below < 300 && rect.top > below);
+    const flip = below < 300 && rect.top > below;
+    setUp(flip);
+    // Never taller than the room left on screen (small phones, landscape).
+    setMaxH(Math.max(140, Math.min(288, (flip ? rect.top : below) - 16)));
     setActive(Math.max(selectedIndex, 0));
     setOpen(true);
   }
@@ -204,7 +208,8 @@ export function Select({ value, onChange, groups, labelledBy, placeholder = 'Sel
         hidden={!open}
         // Keep focus on the trigger when clicking options or dragging the scrollbar.
         onPointerDown={(e) => e.preventDefault()}
-        className={`scroll-thin absolute inset-x-0 z-30 max-h-72 overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface p-1 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.45)] ${
+        style={{ maxHeight: maxH }}
+        className={`scroll-thin absolute inset-x-0 z-30 overflow-x-hidden overflow-y-auto overscroll-contain rounded-lg border border-line bg-surface p-1 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.45)] ${
           up ? 'bottom-full mb-1.5 origin-bottom' : 'top-full mt-1.5 origin-top'
         } ${open ? 'animate-[pop_140ms_ease-out]' : ''}`}
       >

@@ -54,8 +54,8 @@ export function Builder() {
   }
 
   return (
-    <div className="grid items-start gap-12 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16">
-      <div className="flex flex-col gap-6">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-12 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16">
+      <div className="flex min-w-0 flex-col gap-6">
         <div className="flex flex-col gap-2">
           <span id="device-label" className="text-[13px] text-muted">
             Device

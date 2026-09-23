@@ -95,7 +95,7 @@ export default function Home() {
 
           <section className="border-t border-line py-20">
             <Label>Endpoint</Label>
-            <div className="rounded-lg border border-line bg-surface px-4 py-3 font-mono text-[14px]">
+            <div className="rounded-lg border border-line bg-surface px-4 py-3 font-mono text-[13px] break-all sm:text-[14px]">
               <span className="text-accent">GET</span> /wallpaper<span className="text-muted">?w=&amp;h=&amp;tz=&amp;theme=</span>
             </div>
             <p className="mt-4 text-[15px] leading-relaxed text-muted">
@@ -135,7 +135,12 @@ export default function Home() {
             <h3 className="mt-14 mb-5 text-[15px]">Examples</h3>
             <div className="flex flex-col gap-2 font-mono text-[13px]">
               {['/wallpaper', '/wallpaper?tz=Asia/Kolkata', '/wallpaper?w=1320&h=2868&tz=Europe/Berlin', '/wallpaper?theme=light&tz=America/New_York'].map((ex) => (
-                <a key={ex} href={ex} target="_blank" className="w-fit text-muted underline decoration-line underline-offset-4 transition-colors hover:text-fg hover:decoration-muted">
+                <a
+                  key={ex}
+                  href={ex}
+                  target="_blank"
+                  className="w-fit max-w-full break-all text-muted underline decoration-line underline-offset-4 transition-colors hover:text-fg hover:decoration-muted"
+                >
                   {ex}
                 </a>
               ))}
