@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { devices } from '../_lib/devices';
+import { Select, type Group } from './select';
 
 type Theme = 'dark' | 'light';
+
+const deviceGroups: Group[] = [{ options: devices.map((d) => ({ value: d.id, label: d.label, hint: `${d.w}×${d.h}` })) }, { options: [{ value: 'custom', label: 'Custom size' }] }];
 
 const field = 'w-full rounded-lg border border-line bg-surface px-3 py-2.5 font-mono text-[13px] text-fg outline-none transition-colors focus:border-muted';
 
@@ -19,10 +22,22 @@ export function Builder() {
   useEffect(() => {
     // Browser-only values; read once after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTz(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
     setOrigin(window.location.origin);
-    setZones(Intl.supportedValuesOf?.('timeZone') ?? []);
+    const local = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    const all = Intl.supportedValuesOf?.('timeZone') ?? [];
+    // Some engines list neither UTC nor the resolved local zone; always offer both.
+    setZones([...new Set(['UTC', local, ...all])]);
+    setTz(local);
   }, []);
+
+  const zoneGroups = useMemo<Group[]>(() => {
+    const groups = new Map<string, string[]>();
+    for (const z of zones) {
+      const region = z.includes('/') ? z.split('/')[0] : 'Other';
+      groups.set(region, [...(groups.get(region) ?? []), z]);
+    }
+    return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([label, list]) => ({ label, options: list.map((z) => ({ value: z, label: z.replace(/_/g, ' ') })) }));
+  }, [zones]);
 
   const device = devices.find((d) => d.id === deviceId);
   const w = device?.w ?? custom.w;
@@ -39,19 +54,14 @@ export function Builder() {
   }
 
   return (
-    <div className="grid items-start gap-12 md:grid-cols-[1fr_auto] md:gap-16">
+    <div className="grid items-start gap-12 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16">
       <div className="flex flex-col gap-6">
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] text-muted">Device</span>
-          <select className={field} value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
-            {devices.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.label} · {d.w}×{d.h}
-              </option>
-            ))}
-            <option value="custom">Custom size</option>
-          </select>
-        </label>
+        <div className="flex flex-col gap-2">
+          <span id="device-label" className="text-[13px] text-muted">
+            Device
+          </span>
+          <Select value={deviceId} onChange={setDeviceId} groups={deviceGroups} labelledBy="device-label" />
+        </div>
 
         {!device && (
           <div className="grid grid-cols-2 gap-3">
@@ -64,15 +74,12 @@ export function Builder() {
           </div>
         )}
 
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] text-muted">Time zone</span>
-          <input className={field} list="zones" value={tz} placeholder="UTC" spellCheck={false} onChange={(e) => setTz(e.target.value)} />
-          <datalist id="zones">
-            {zones.map((z) => (
-              <option key={z} value={z} />
-            ))}
-          </datalist>
-        </label>
+        <div className="flex flex-col gap-2">
+          <span id="tz-label" className="text-[13px] text-muted">
+            Time zone
+          </span>
+          <Select value={tz} onChange={setTz} groups={zoneGroups} labelledBy="tz-label" placeholder="Detecting…" disabled={!tz} />
+        </div>
 
         <div className="flex flex-col gap-2">
           <span className="text-[13px] text-muted">Theme</span>
