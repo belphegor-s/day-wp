@@ -46,7 +46,7 @@ export function Builder() {
           <select className={field} value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
             {devices.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.label} — {d.w}×{d.h}
+                {d.label} · {d.w}×{d.h}
               </option>
             ))}
             <option value="custom">Custom size</option>

@@ -8,7 +8,7 @@ const serif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['nor
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000');
 
-const title = 'Day — the year, one dot at a time';
+const title = 'Day · the year, one dot at a time';
 const description = 'A lock-screen wallpaper that redraws itself. Every day of the year is a dot: the ones behind you filled, today filling by the hour. One URL, no app.';
 
 export const metadata: Metadata = {
