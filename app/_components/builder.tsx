@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { devices } from '../_lib/devices';
+import { Phone } from './phone';
 import { Select, type Group } from './select';
 
 type Theme = 'dark' | 'light';
@@ -82,14 +83,35 @@ export function Builder() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-[13px] text-muted">Theme</span>
-          <div className="inline-flex w-fit rounded-lg border border-line bg-surface p-1">
+          <span id="theme-label" className="text-[13px] text-muted">
+            Theme
+          </span>
+          <div role="radiogroup" aria-labelledby="theme-label" className="relative grid w-fit grid-cols-2 rounded-lg border border-line bg-surface p-1">
+            {/* One pill slides between equal-width halves. */}
+            <span
+              aria-hidden
+              className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-md bg-fg transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none ${
+                theme === 'light' ? 'translate-x-full' : 'translate-x-0'
+              }`}
+            />
             {(['dark', 'light'] as const).map((t) => (
               <button
                 key={t}
                 type="button"
+                role="radio"
+                aria-checked={theme === t}
+                tabIndex={theme === t ? 0 : -1}
                 onClick={() => setTheme(t)}
-                className={`rounded-md px-4 py-1.5 font-mono text-[13px] transition-colors ${theme === t ? 'bg-fg text-bg' : 'text-muted hover:text-fg'}`}
+                onKeyDown={(e) => {
+                  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                    e.preventDefault();
+                    const next = theme === 'dark' ? 'light' : 'dark';
+                    setTheme(next);
+                    (e.currentTarget.parentElement?.querySelector(`[data-theme="${next}"]`) as HTMLElement | null)?.focus();
+                  }
+                }}
+                data-theme={t}
+                className={`relative z-10 px-4 py-1.5 text-center font-mono text-[13px] transition-colors duration-300 ${theme === t ? 'text-bg' : 'text-muted hover:text-fg'}`}
               >
                 {t}
               </button>
@@ -115,28 +137,7 @@ export function Builder() {
         </div>
       </div>
 
-      <Phone src={tz ? preview : null} light={theme === 'light'} ratio={w / h} />
-    </div>
-  );
-}
-
-function Phone({ src, light, ratio }: { src: string | null; light: boolean; ratio: number }) {
-  const [loaded, setLoaded] = useState<string | null>(null);
-  return (
-    <div className="mx-auto w-[220px] rounded-[38px] border border-line bg-surface p-[7px] shadow-[0_30px_80px_-40px_rgba(0,0,0,0.5)]">
-      <div className={`relative overflow-hidden rounded-[31px] ${light ? 'bg-white' : 'bg-black'}`} style={{ aspectRatio: ratio }}>
-        {src && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={src}
-            src={src}
-            alt="Live preview of the wallpaper"
-            onLoad={() => setLoaded(src)}
-            className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${loaded === src ? 'opacity-100' : 'opacity-0'}`}
-          />
-        )}
-        <div className={`absolute top-[9px] left-1/2 h-[18px] w-[62px] -translate-x-1/2 rounded-full ${light ? 'bg-black' : 'bg-[#1a1a1a]'}`} />
-      </div>
+      <Phone preview={tz ? preview : null} full={`/wallpaper?${query}`} light={theme === 'light'} ratio={w / h} caption={`${w}×${h} · ${tz || 'UTC'} · ${theme}`} />
     </div>
   );
 }
