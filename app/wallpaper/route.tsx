@@ -28,13 +28,27 @@ function describeArc(cx: number, cy: number, r: number, progress: number) {
   `;
 }
 
+function clamp(n: number, min: number, max: number) {
+  return Math.round(Math.min(Math.max(n, min), max));
+}
+
+function isValidTimeZone(tz: string | null): tz is string {
+  if (!tz) return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
-  const width = Number(searchParams.get('w')) || 1179;
-  const height = Number(searchParams.get('h')) || 2556;
-  const tz = searchParams.get('tz') || 'UTC';
-  const theme = searchParams.get('theme') || 'dark';
+  const width = clamp(Number(searchParams.get('w')) || 1179, 200, 4096);
+  const height = clamp(Number(searchParams.get('h')) || 2556, 200, 4096);
+  const tz = isValidTimeZone(searchParams.get('tz')) ? searchParams.get('tz')! : 'UTC';
+  const theme = searchParams.get('theme') === 'light' ? 'light' : 'dark';
 
   const now = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
   const hoursCompleted = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
@@ -165,6 +179,11 @@ export async function GET(req: Request) {
         {percent}% complete ({daysLeft} days left)
       </div>
     </div>,
-    { width, height },
+    {
+      width,
+      height,
+      // The image changes every hour; never let a CDN or the phone serve a stale day.
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    },
   );
 }
